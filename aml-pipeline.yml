@@ -1,0 +1,20 @@
+pipeline:
+    name: ADBExamplePipeline
+    default_compute: databricksprod
+    steps:
+        DataPrep:
+            type: "DatabricksStep"
+            name: "DatabricksBasicClean"
+            run_name: "ADBExamplePipeline-DataPrep"
+            notebook_path: "/Shared/aml-databricks-example/1_basic_clean"
+            num_workers: 1
+            allow_reuse: true
+            existing_cluster_id: "0402-120800-ale680"
+        Training:
+            type: "DatabricksStep"
+            name: "DatabricksBasicTrain"
+            run_name: "ADBExamplePipeline-Training"
+            notebook_path: "/Shared/aml-databricks-example/2_basic_train_automl"
+            num_workers: 1
+            allow_reuse: false
+            existing_cluster_id: "0402-120800-ale680"

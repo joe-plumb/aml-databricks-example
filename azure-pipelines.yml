@@ -1,0 +1,140 @@
+# https://aka.ms/yaml
+
+trigger:
+    - master
+  
+variables:
+    aml.workspace: amls-databricks
+    aml.rg: jp-databricks
+    aml.pipeline: aml-pipeline.yml
+    databricks.host: https://centralus.azuredatabricks.net
+    databricks.notebook.path: /Shared/aml-databricks-example
+    databricks.cluster.name: demo-cluster
+    databricks.cluster.id: 0402-120800-ale680
+    databricks.cluster.spark_version: 6.4.x-scala2.11
+    databricks.cluster.node_type_id: Standard_DS3_v2
+    databricks.cluster.driver_node_type_id: Standard_DS3_v3
+    databricks.cluster.autotermination_minutes: 30
+    databricks.cluster.workers.min: 2
+    databricks.cluster.workers.max: 2
+  
+stages:
+    - stage: Build
+      displayName: 'Build AML Pipeline'
+      jobs:
+        - job: Train
+          displayName: 'Build AML Pipeline'
+          pool:
+            vmImage: 'Ubuntu-16.04'
+          steps:
+            - task: UsePythonVersion@0
+              displayName: 'Use Python 3.6'
+              inputs:
+                versionSpec: '3.6'
+                addToPath: true
+                architecture: 'x64'
+            - task: Bash@3
+              displayName: 'Install az cli tools'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  az extension remove --name azure-devops
+                  az extension add --source https://github.com/Azure/azure-devops-cli-extension/releases/download/20200401.4/azure_devops-0.18.0-py2.py3-none-any.whl -y
+                  az extension add --source https://azurecliext.blob.core.windows.net/release/azure_cli_ml-1.0.85-py2.py3-none-any.whl -y
+                  pip install -U databricks-cli
+                  az login --service-principal -u $(sp.appid) -p $(sp.password) --tenant $(sp.tenant)
+            - task: Bash@3
+              displayName: 'Configure Databricks CLI'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  # We need to write the pipe the conf into databricks configure --token since
+                  # that command only takes inputs from stdin.
+                  conf=`cat << EOM
+                  $(databricks.host)
+                  $(databricks.token)
+                  EOM`
+  
+                  # For password auth there are three lines expected
+                  # hostname, username, password
+                  echo "$conf" | databricks configure --token
+            - task: Bash@3
+              displayName: 'Create Notebook Path, Import Notebooks'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  databricks workspace mkdirs "$(databricks.notebook.path)"
+                  databricks workspace import_dir --overwrite notebooks "$(databricks.notebook.path)"
+            - task: Bash@3
+              displayName: 'Create / Get Cluster'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  cluster_id=$(databricks clusters list | grep "$(databricks.cluster.name)" | awk '{print $1}')
+  
+                  if [ -z "$cluster_id" ]
+                  then
+                  JSON=`cat << EOM
+                  {
+                    "cluster_name": "$(databricks.cluster.name)",
+                    "spark_version": "$(databricks.cluster.spark_version)",
+                    "spark_conf": {
+                      "spark.databricks.delta.preview.enabled": "true"
+                    },
+                    "node_type_id": "$(databricks.cluster.node_type_id)",
+                    "driver_node_type_id": "$(databricks.cluster.driver_node_type_id)",
+                    "spark_env_vars": {
+                      "PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+                    },
+                    "autotermination_minutes": $(databricks.cluster.autotermination_minutes),
+                    "enable_elastic_disk": true,
+                    "autoscale": {
+                      "min_workers": $(databricks.cluster.workers.min),
+                      "max_workers": $(databricks.cluster.workers.max)
+                    },
+                    "init_scripts_safe_mode": false
+                  }
+                  EOM`
+  
+                  cluster_id=$(databricks clusters create --json "$JSON" | jq -r ".cluster_id")
+                  sleep 10
+                  fi
+  
+                  echo "##vso[task.setvariable variable=databricks.cluster.id;]$cluster_id"
+            - task: Bash@3
+              displayName: 'Start Cluster'
+              inputs:
+                targetType: 'inline'
+                script: |
+                  echo "Checking Cluster State (Cluster ID: $(databricks.cluster.id))..."
+                  cluster_state=$(databricks clusters get --cluster-id "$(databricks.cluster.id)" | jq -r ".state")
+                  echo "Cluster State: $cluster_state"
+  
+                  if [ $cluster_state == "TERMINATED" ]
+                  then
+                    echo "Starting Databricks Cluster..."
+                    databricks clusters start --cluster-id "$(databricks.cluster.id)"
+                    sleep 30
+                    cluster_state=$(databricks clusters get --cluster-id "$(databricks.cluster.id)" | jq -r ".state")
+                    echo "Cluster State: $cluster_state"
+                  fi
+  
+                  while [ $cluster_state == "PENDING" ]
+                  do
+                    sleep 30
+                    cluster_state=$(databricks clusters get --cluster-id "$(databricks.cluster.id)" | jq -r ".state")
+                    echo "Cluster State: $cluster_state"
+                  done
+  
+                  if [ $cluster_state == "RUNNING" ]
+                  then
+                    exit 0
+                  else
+                    exit 1
+                  fi
+            - task: Bash@3
+              displayName: Build and Submit AML Pipeline from yaml
+              inputs:
+                targetType: 'inline'
+                script: |
+                  az ml run submit-pipeline -n ADBExamplePipeline -y $(aml.pipeline) -w $(aml.workspace) -g $(aml.rg) 
