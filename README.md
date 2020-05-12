@@ -76,3 +76,16 @@ You can [learn more about the `azure-pipelines.yml` specification here](https://
 
 ### aml-pipeline.yml
 The Azure ML pipeline defines the units of work to be undertaken as part of the Machine Learning workflow. This is defined in `aml-pipeline.yml`. Take a ok at the file, you will see it references the 2 python scripts that make up the ML pipeline (data prep, then training). This pipeline declaration is passed in to the `az ml` cli in the last step of the Azure DevOps build pipeline.
+
+## Future developments
+Further developments to this repo could include
+- Example release pipeline with ACI and AKS
+- Automated testing in release pipeline
+- Deeper integration with Key Vault (AzDO)
+- IaC for initial deployment
+- Script Service Principal setup
+
+## Credits
+az cli and Azure Databricks integration leverages code from https://github.com/SaschaDittmann/MLOps-Databricks
+Example ML code from https://docs.microsoft.com/en-us/azure/databricks/_static/notebooks/getting-started/popvspricelr.html and 
+https://docs.microsoft.com/en-us/azure/databricks/getting-started/spark/machine-learning, using Databricks Sample Dataset https://docs.microsoft.com/en-us/azure/databricks/data/databricks-datasets 
