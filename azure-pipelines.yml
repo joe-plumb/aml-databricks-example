@@ -38,6 +38,7 @@ stages:
               inputs:
                 targetType: 'inline'
                 script: |
+                  yum install azure-cli-2.0.77-1.el7.x86_64
                   az extension remove --name azure-devops
                   az extension add --source https://github.com/Azure/azure-devops-cli-extension/releases/download/20200401.4/azure_devops-0.18.0-py2.py3-none-any.whl -y
                   az extension add --source https://azurecliext.blob.core.windows.net/release/azure_cli_ml-1.0.85-py2.py3-none-any.whl -y
