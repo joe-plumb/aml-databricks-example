@@ -139,5 +139,5 @@ stages:
                 targetType: 'inline'
                 script: |
                   az extension list
-                  az ml run submit-pipeline -n ADBExamplePipeline -y $(aml.pipeline) -w $(aml.workspace) -g $(aml.rg) 
+                  az ml run submit-pipeline -n ADBExamplePipeline -y $(aml.pipeline) -w $(aml.workspace) -g $(aml.rg) -o jsonc
                   az feedback
