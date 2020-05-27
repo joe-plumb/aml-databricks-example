@@ -1,4 +1,5 @@
 # Template for ML workloads using Azure Machine Learning and Azure Databricks
+[![Build Status](https://dev.azure.com/jpazuredev/machinelearning-devops/_apis/build/status/joe-plumb.aml-databricks-example?branchName=master)](https://dev.azure.com/jpazuredev/machinelearning-devops/_build/latest?definitionId=8&branchName=master)
 This repo contains code and instructions for standing up an example project leveraging best practices for Machine Learning pipelines using Azure Machine Learning, Azure Databricks, and Azure Blob Storage. The notebooks and code here can be used as a reference and lab to understand the process of moving from an "all-in-one" end to end ML process in one notebook, to breaking that down into separate, distinct steps (i.e. data prep, training, evaluation), tieing those steps together using ML pipelines, and parameterizing secrets and runtime variables. Additionally, the example showcases Azure Machine Learning's AutoML. You can learn more about [how AutoML works in the documentation](https://docs.microsoft.com/en-us/azure/machine-learning/concept-automated-ml).
 
 ## Build and deploy the Template
