@@ -1,4 +1,5 @@
 # Template for ML workloads using Azure Machine Learning and Azure Databricks
+[![Build Status](https://dev.azure.com/jpazuredev/machinelearning-devops/_apis/build/status/joe-plumb.aml-databricks-example?branchName=master)](https://dev.azure.com/jpazuredev/machinelearning-devops/_build/latest?definitionId=8&branchName=master)
 This repo contains code and instructions for standing up an example project leveraging best practices for Machine Learning pipelines using Azure Machine Learning, Azure Databricks, and Azure Blob Storage. The notebooks and code here can be used as a reference and lab to understand the process of moving from an "all-in-one" end to end ML process in one notebook, to breaking that down into separate, distinct steps (i.e. data prep, training, evaluation), tieing those steps together using ML pipelines, and parameterizing secrets and runtime variables. Additionally, the example showcases Azure Machine Learning's AutoML. You can learn more about [how AutoML works in the documentation](https://docs.microsoft.com/en-us/azure/machine-learning/concept-automated-ml).
 
 ## Build and deploy the Template
@@ -76,3 +77,16 @@ You can [learn more about the `azure-pipelines.yml` specification here](https://
 
 ### aml-pipeline.yml
 The Azure ML pipeline defines the units of work to be undertaken as part of the Machine Learning workflow. This is defined in `aml-pipeline.yml`. Take a ok at the file, you will see it references the 2 python scripts that make up the ML pipeline (data prep, then training). This pipeline declaration is passed in to the `az ml` cli in the last step of the Azure DevOps build pipeline.
+
+## Future developments
+Further developments to this repo could include
+- Example release pipeline with ACI and AKS
+- Automated testing in release pipeline
+- Deeper integration with Key Vault (AzDO)
+- IaC for initial deployment
+- Script Service Principal setup
+
+## Credits
+az cli and Azure Databricks integration leverages code from https://github.com/SaschaDittmann/MLOps-Databricks
+Example ML code from https://docs.microsoft.com/en-us/azure/databricks/_static/notebooks/getting-started/popvspricelr.html and 
+https://docs.microsoft.com/en-us/azure/databricks/getting-started/spark/machine-learning, using Databricks Sample Dataset https://docs.microsoft.com/en-us/azure/databricks/data/databricks-datasets 

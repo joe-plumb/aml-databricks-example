@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
 
 trigger:
-    - master
+    - develop
   
 variables:
     aml.workspace: amls-databricks
@@ -38,9 +38,10 @@ stages:
               inputs:
                 targetType: 'inline'
                 script: |
-                  az extension remove --name azure-devops
-                  az extension add --source https://github.com/Azure/azure-devops-cli-extension/releases/download/20200401.4/azure_devops-0.18.0-py2.py3-none-any.whl -y
-                  az extension add --source https://azurecliext.blob.core.windows.net/release/azure_cli_ml-1.0.85-py2.py3-none-any.whl -y
+                  sudo curl https://packages.microsoft.com/repos/azure-cli/pool/main/a/azure-cli/azure-cli_2.2.0-1~xenial_all.deb --output cli.deb
+                  sudo apt-get remove -y azure-cli
+                  sudo apt install ./cli.deb
+                  az extension add --source https://azurecliext.blob.core.windows.net/release/azure_cli_ml-1.2.0-py2.py3-none-any.whl --yes -y
                   pip install -U databricks-cli
                   az login --service-principal -u $(sp.appid) -p $(sp.password) --tenant $(sp.tenant)
             - task: Bash@3
@@ -137,4 +138,4 @@ stages:
               inputs:
                 targetType: 'inline'
                 script: |
-                  az ml run submit-pipeline -n ADBExamplePipeline -y $(aml.pipeline) -w $(aml.workspace) -g $(aml.rg) 
+                  az ml run submit-pipeline -n ADBExamplePipeline -y $(aml.pipeline) -w $(aml.workspace) -g $(aml.rg)
