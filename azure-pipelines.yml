@@ -38,7 +38,10 @@ stages:
               inputs:
                 targetType: 'inline'
                 script: |
-                  az extension add -n azure-cli-ml
+                  sudo curl https://packages.microsoft.com/repos/azure-cli/pool/main/a/azure-cli/azure-cli_2.2.0-1~xenial_all.deb --output cli.deb
+                  sudo apt-get remove -y azure-cli
+                  sudo apt install ./cli.deb
+                  az extension add --source https://azurecliext.blob.core.windows.net/release/azure_cli_ml-1.2.0-py2.py3-none-any.whl --yes -y
                   pip install -U databricks-cli
                   az login --service-principal -u $(sp.appid) -p $(sp.password) --tenant $(sp.tenant)
             - task: Bash@3
